@@ -30,7 +30,7 @@ cargo run -- [command] [args]
 
 ### Testing
 ```bash
-# Run all tests
+# Run Rust unit tests
 cargo test
 
 # Run specific test
@@ -39,6 +39,15 @@ cargo test test_name
 # Run tests with output
 cargo test -- --nocapture
 
+# Run UI tests (Playwright E2E tests)
+npm test
+
+# Run UI tests with visual debugging
+npm run test:ui
+
+# Run UI tests in debug mode
+npm run test:debug
+
 # Run with debug logging
 RUST_LOG=debug cargo run -- [command]
 RUST_LOG=trace cargo run -- [command]  # More verbose
@@ -46,12 +55,12 @@ RUST_LOG=trace cargo run -- [command]  # More verbose
 
 ### Web UI Development
 ```bash
-# Start development server with CSS built
+# Start development server with CSS built (recommended)
 make dev_server
 
-# Start development with CSS watch mode
+# Start development with CSS watch mode (manual approach)
 make css-watch  # In one terminal
-cargo run -- server ./seed  # In another terminal
+cargo run -- server ./seed --port 9080  # In another terminal
 
 # Install dependencies (first time setup)
 npm install
@@ -203,11 +212,10 @@ Custom Tailwind components for consistent styling:
 
 ## Testing Approach
 
-Currently no automated tests (as noted in CONTRIBUTING.md). Manual testing approach:
-1. Use `cook seed` to create test recipes
-2. Test each command with various options
-3. Validate output formats
-4. Check error handling with invalid inputs
+The project includes comprehensive UI testing via Playwright E2E tests:
+1. **UI Tests**: Full end-to-end testing covering navigation, recipe display, shopping lists, search, and accessibility
+2. **Manual Testing**: Use `cook seed` to create test recipes and test commands
+3. **CI/CD**: Tests run automatically on GitHub Actions for cross-browser compatibility
 
 ## Release Process
 
@@ -242,9 +250,9 @@ Output formatting is centralized in `src/util/` modules. Each format has its own
 
 ### Frontend Development Workflow
 1. Install dependencies: `npm install`
-2. Start CSS watch: `npm run watch-css`
-3. Run server: `cargo run -- server ./seed`
-4. Make changes to templates or styles
+2. Start development server: `make dev_server` (includes CSS compilation and runs on port 9080)
+3. Make changes to templates or styles
+4. For CSS changes: Use `npm run watch-css` in separate terminal for auto-rebuild
 5. Refresh browser to see changes (templates are recompiled on each request in dev mode)
 
 ### Debugging Recipe Parsing

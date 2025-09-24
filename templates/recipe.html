@@ -3,7 +3,7 @@
 {% block title %}{{ recipe.name }} - Cook{% endblock %}
 
 {% block content %}
-<div>
+<div class="container-bounds wrap-text">
     <nav class="mb-4 breadcrumb print:hidden">
         <ol class="flex space-x-2 text-sm text-gray-600">
             <li><a href="/" class="hover:text-gray-900">Recipes</a></li>
@@ -31,38 +31,39 @@
         {% endmatch %}
 
         <!-- Title bar with scale and shopping list button -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 print:flex-row print:items-center">
-            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent print:text-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 print:flex-row print:items-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white print:text-2xl wrap-text">
                 {{ recipe.name }}
             </h1>
             {% if scale != 1.0 %}
             <div class="hidden print:block text-lg font-normal text-gray-700">Scale: {{ scale }}x</div>
             {% endif %}
-            <div class="flex flex-wrap items-center gap-3 print:hidden">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 print:hidden">
                 <div class="flex items-center">
-                    <label for="scale" class="text-sm font-medium text-gray-700 mr-2">Scale:</label>
+                    <label for="scale" class="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Scale:</label>
                     <input type="number"
                            id="scale"
                            value="{{ scale }}"
                            min="0.5"
                            max="200"
                            step="0.5"
-                           class="px-3 py-2 border border-gray-300 rounded-lg w-20 text-center"
+                           class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg w-20 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-gray-900 dark:focus:border-gray-300 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-300 focus:outline-none"
                            onchange="window.location.href = `/recipe/{{ recipe_path }}?scale=${this.value}`">
                 </div>
                 <button onclick="addToShoppingList(event, '{{ recipe_path }}')"
-                        class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all shadow-md flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="px-3 sm:px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm font-medium min-h-[44px]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
-                    Add to Shopping List
+                    <span class="hidden sm:inline">Add to List</span>
+                    <span class="sm:hidden">Add</span>
                 </button>
                 <button onclick="window.print()"
-                        class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md flex items-center gap-2 print:hidden">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm font-medium print:hidden min-h-[44px]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                     </svg>
-                    Print Recipe
+                    <span class="hidden sm:inline">Print</span>
                 </button>
             </div>
         </div>
@@ -85,7 +86,7 @@
             {% match metadata.description %}
             {% when Some with (description) %}
             <div class="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-xl border border-orange-200">
-                <p class="text-gray-700 italic">{{ description }}</p>
+                <p class="text-gray-700 italic wrap-text">{{ description }}</p>
             </div>
             {% when None %}
             {% endmatch %}
@@ -161,7 +162,7 @@
 
     <div class="grid md:grid-cols-3 gap-8 mb-8">
         <div class="md:col-span-1">
-            <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6 container-bounds">
                 <h2 class="text-xl font-bold mb-4 text-orange-600">🥘 Ingredients</h2>
 
                 {% if sections.len() > 1 %}
@@ -187,7 +188,7 @@
                                         {{ ingredient.name }}
                                     </a>
                                 {% when None %}
-                                    <span class="font-medium">{{ ingredient.name }}</span>
+                                    <span class="font-medium wrap-text">{{ ingredient.name }}</span>
                                 {% endmatch %}
                                 <span class="text-orange-700 font-semibold">
                                     {% match ingredient.quantity %}
@@ -214,7 +215,7 @@
                                 {{ ingredient.name }}
                             </a>
                         {% when None %}
-                            <span class="font-medium">{{ ingredient.name }}</span>
+                            <span class="font-medium wrap-text">{{ ingredient.name }}</span>
                         {% endmatch %}
                         <span class="text-orange-700 font-semibold">
                             {% match ingredient.quantity %}
@@ -232,7 +233,7 @@
             <ul class="space-y-2">
                 {% for item in cookware %}
                 <li class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg px-3 py-2">
-                    <span class="font-medium">{{ item.name }}</span>
+                    <span class="font-medium wrap-text">{{ item.name }}</span>
                 </li>
                 {% endfor %}
             </ul>
@@ -241,7 +242,7 @@
         </div>
 
         <div class="md:col-span-2">
-            <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6 container-bounds">
                 {% for section in sections %}
                     {% match section.name %}
                     {% when Some with (name) %}
@@ -255,7 +256,7 @@
                         <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-3 border-l-4 border-blue-400">
                             <div class="flex items-start gap-2">
                                 <span class="text-blue-600">📝</span>
-                                <p class="text-gray-700 italic">{{ note }}</p>
+                                <p class="text-gray-700 italic wrap-text">{{ note }}</p>
                             </div>
                         </div>
                         {% endfor %}
@@ -268,7 +269,7 @@
                             <div class="flex gap-4">
                                 <div class="step-number">{{ section.step_offset + loop.index }}</div>
                                 <div class="flex-1">
-                                    <div class="text-gray-700 mb-2 leading-8">
+                                    <div class="text-gray-700 mb-2 leading-8 wrap-text">
                                     {% for item in step.items %}
                                         {% match item %}
                                             {% when crate::server::templates::StepItem::Text with (text) %}{{ text }}{% when crate::server::templates::StepItem::Ingredient with { name, reference_path } %}{% match reference_path %}{% when Some with (path) %}<a href="/recipe/{{ path }}" class="ingredient-badge hover:underline" title="View recipe: {{ name }}">{{ name }}</a>{% when None %}<span class="ingredient-badge">{{ name }}</span>{% endmatch %}{% when crate::server::templates::StepItem::Cookware with (name) %}<span class="cookware-badge">{{ name }}</span>{% when crate::server::templates::StepItem::Timer with (name) %}<span class="timer-badge">⏱️ {{ name }}</span>{% when crate::server::templates::StepItem::Quantity with (qty) %}<span class="font-bold text-orange-600">{{ qty }}</span>{% endmatch %}{% endfor %}

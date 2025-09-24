@@ -4,117 +4,82 @@
 
 /* Custom component classes */
 @layer components {
-    /* Recipe cards with colorful borders */
-    .recipe-card {
-        @apply relative overflow-hidden;
+    /* Base badge styles for consistency */
+    .badge-base {
+        @apply inline-block align-middle px-2 py-0.5 rounded-full text-sm font-medium whitespace-nowrap max-w-full;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
-
-    .recipe-card::before {
-        content: '';
-        @apply absolute top-0 left-0 right-0 h-1;
-        background: linear-gradient(90deg, #ff6b35, #fbbf24, #4ade80);
-    }
-
+    
     /* Ingredient badges */
     .ingredient-badge {
-        @apply inline-block align-middle px-2 py-0.5 rounded-full text-sm font-medium whitespace-nowrap;
-        background: linear-gradient(135deg, #fef3c7, #fed7aa);
-        @apply text-orange-700 border border-orange-400;
+        @apply badge-base bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800;
     }
 
     .cookware-badge {
-        @apply inline-block align-middle px-2 py-0.5 rounded-full text-sm font-medium whitespace-nowrap;
-        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-        @apply text-green-900 border border-green-400;
+        @apply badge-base bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800;
     }
 
     .timer-badge {
-        @apply inline-block align-middle px-2 py-0.5 rounded-full text-sm font-medium whitespace-nowrap;
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        @apply text-red-900 border border-red-400;
+        @apply badge-base bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800;
     }
 
-    /* Enhanced buttons */
-    .btn-primary {
-        background: linear-gradient(135deg, #ff6b35, #f97316);
-        @apply shadow-lg hover:-translate-y-0.5 transition-all;
-    }
-
-    .btn-primary:hover {
-        box-shadow: 0 6px 20px 0 rgba(255, 107, 53, 0.4);
-    }
-
-    /* Step numbers with colorful circles */
+    /* Step numbers */
     .step-number {
-        @apply w-8 h-8 flex items-center justify-center rounded-full text-white font-bold flex-shrink-0;
-        background: linear-gradient(135deg, #ff6b35, #f97316);
+        @apply w-8 h-8 flex items-center justify-center rounded-full font-bold flex-shrink-0;
+        @apply bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900;
     }
 
-    /* Tags styling */
+    /* Tags */
     .tag {
         @apply inline-block px-3 py-1 rounded-full text-xs font-medium mr-2;
-        background: linear-gradient(135deg, #fbbf24, #fb923c);
-        @apply text-white shadow-sm;
-    }
-
-    /* Navigation pills */
-    .nav-pill {
-        @apply px-5 py-2 rounded-full transition-all font-medium text-gray-500 relative;
-    }
-
-    .nav-pill:hover {
-        background: linear-gradient(135deg, #fef3c7, #fed7aa);
-        @apply text-orange-700 -translate-y-0.5 shadow-md;
-    }
-
-    .nav-pill.active {
-        background: linear-gradient(135deg, #ff6b35, #f97316);
-        @apply text-white font-bold shadow-lg;
+        @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300;
     }
 
     /* Recipe metadata pills - simple outline style */
     .metadata-pill {
-        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap border bg-white;
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap border;
+        @apply bg-white dark:bg-gray-800 dark:border-gray-600;
     }
 
     .metadata-servings {
-        @apply text-gray-600 border-gray-300;
+        @apply text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600;
     }
 
     .metadata-time {
-        @apply text-blue-600 border-blue-300;
+        @apply text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-600;
     }
 
     .metadata-difficulty {
-        @apply text-yellow-600 border-yellow-300;
+        @apply text-yellow-600 dark:text-yellow-400 border-yellow-300 dark:border-yellow-600;
     }
 
     .metadata-course {
-        @apply text-orange-600 border-orange-300;
+        @apply text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600;
     }
 
     .metadata-prep {
-        @apply text-indigo-600 border-indigo-300;
+        @apply text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-600;
     }
 
     .metadata-cook {
-        @apply text-red-600 border-red-300;
+        @apply text-red-600 dark:text-red-400 border-red-300 dark:border-red-600;
     }
 
     .metadata-cuisine {
-        @apply text-green-600 border-green-300;
+        @apply text-green-600 dark:text-green-400 border-green-300 dark:border-green-600;
     }
 
     .metadata-diet {
-        @apply text-lime-600 border-lime-300;
+        @apply text-lime-600 dark:text-lime-400 border-lime-300 dark:border-lime-600;
     }
 
     .metadata-author {
-        @apply text-pink-600 border-pink-300;
+        @apply text-pink-600 dark:text-pink-400 border-pink-300 dark:border-pink-600;
     }
 
     .metadata-custom {
-        @apply text-purple-600 border-purple-300;
+        @apply text-purple-600 dark:text-purple-400 border-purple-300 dark:border-purple-600;
     }
 
     /* Search input with colorful focus */
@@ -173,4 +138,62 @@
     .item-status-dot.out-of-stock {
         @apply bg-red-500 dark:bg-red-400;
     }
+
+    /* Text wrapping and container utilities */
+    .container-bounds {
+        @apply max-w-full overflow-hidden;
+    }
+
+    .wrap-text {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        @apply leading-relaxed;
+    }
+
+    /* Responsive text */
+    .responsive-text {
+        @apply text-sm sm:text-base md:text-lg;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Recipe card with overflow prevention */
+    .recipe-card {
+        @apply container-bounds;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Viewport layout */
+    .viewport {
+        @apply w-full max-w-6xl mx-auto my-8 px-4;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+
+    /* Global overflow prevention */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Theme toggle styles */
+    .theme-toggle {
+        @apply relative w-12 h-6 rounded-full p-0.5 cursor-pointer transition-colors;
+        background-color: #9ca3af;
+    }
+
+    .theme-toggle.dark {
+        background-color: #7c3aed;
+    }
+
+    .theme-toggle-handle {
+        @apply absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform flex items-center justify-center;
+    }
+
+    .theme-toggle.dark .theme-toggle-handle {
+        transform: translateX(1.5rem);
+    }
+
 }

@@ -3,7 +3,7 @@
 {% block title %}Recipes - Cook{% endblock %}
 
 {% block content %}
-<div>
+<div class="container-bounds wrap-text">
     {% if !breadcrumbs.is_empty() %}
     <nav class="mb-4">
         <ol class="flex space-x-2 text-sm text-gray-600">
@@ -18,58 +18,58 @@
     </nav>
     {% endif %}
 
-    <h1 class="text-3xl font-bold mb-8 bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent">
+    <h1 class="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
         {{ current_name }}
     </h1>
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {% for item in items %}
         {% if item.is_directory %}
-        <a href="/directory/{{ item.path }}" class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 recipe-card flex flex-col">
-            <div class="p-6 flex-1">
-                <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4">
-                    <span class="text-2xl">📁</span>
+        <a href="/directory/{{ item.path }}" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            <div class="p-4 sm:p-6 flex-1">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">📁</span>
                 </div>
-                <h3 class="font-bold text-lg mb-2">{{ item.name }}</h3>
+                <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">{{ item.name }}</h3>
                 {% match item.count %}
                 {% when Some with (count) %}
-                <span class="text-sm text-orange-600 font-medium">{{ count }} recipes</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ count }} recipes</span>
                 {% when None %}
                 {% endmatch %}
             </div>
         </a>
         {% else %}
-        <a href="/recipe/{{ item.path }}" class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all hover:scale-105 recipe-card flex flex-col">
+        <a href="/recipe/{{ item.path }}" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
             {% match item.image_path %}
             {% when Some with (img) %}
-            <div class="h-48 bg-gray-100 overflow-hidden">
-                <img src="{{ img }}" alt="{{ item.name }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-300">
+            <div class="h-40 sm:h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                <img src="{{ img }}" alt="{{ item.name }}" class="w-full h-full object-cover">
             </div>
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
             {% when None %}
-            <div class="p-6">
-                <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br {% if item.is_menu %}from-purple-400 to-pink-500{% else %}from-orange-400 to-pink-500{% endif %} rounded-full mb-4">
-                    <span class="text-2xl">{% if item.is_menu %}📋{% else %}🍽️{% endif %}</span>
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 {% if item.is_menu %}bg-purple-100 dark:bg-purple-900{% else %}bg-orange-100 dark:bg-orange-900{% endif %} rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">{% if item.is_menu %}📋{% else %}🍽️{% endif %}</span>
                 </div>
             {% endmatch %}
-            <h3 class="font-bold text-lg mb-2 text-gray-800">
+            <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">
                 {{ item.name }}
                 {% if item.is_menu %}
-                <span class="ml-2 text-xs bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-2 py-1 rounded-full font-semibold">Menu</span>
+                <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-medium">Menu</span>
                 {% endif %}
             </h3>
             {% match item.description %}
             {% when Some with (description) %}
-            <p class="text-gray-600 text-sm">{{ description }}</p>
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-3 wrap-text">{{ description }}</p>
             {% when None %}
             {% endmatch %}
             {% if !item.tags.is_empty() %}
-            <div class="mt-3 flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2">
                 {% for tag in item.tags.iter().take(3) %}
-                <span class="text-xs bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">{{ tag }}</span>
+                <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full">{{ tag }}</span>
                 {% endfor %}
                 {% if item.tags.len() > 3 %}
-                <span class="text-xs text-gray-500">+{{ item.tags.len() - 3 }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">+{{ item.tags.len() - 3 }}</span>
                 {% endif %}
             </div>
             {% endif %}
