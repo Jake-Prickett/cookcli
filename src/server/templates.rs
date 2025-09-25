@@ -45,6 +45,12 @@ pub struct ShoppingListTemplate {
 }
 
 #[derive(Template)]
+#[template(path = "recipe_form.html")]
+pub struct RecipeFormTemplate {
+    pub active: String,
+}
+
+#[derive(Template)]
 #[template(path = "preferences.html")]
 pub struct PreferencesTemplate {
     pub active: String,

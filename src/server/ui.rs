@@ -2,22 +2,25 @@ use crate::server::{templates::*, AppState};
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Router,
+    response::{IntoResponse, Json},
+    routing::{get, post},
+    Router, Form,
 };
 use camino::Utf8PathBuf;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 pub fn ui() -> Router<Arc<AppState>> {
     Router::new()
         .route("/", get(recipes_page))
         .route("/directory/*path", get(recipes_directory))
+        .route("/recipe/new", get(recipe_form_page))
         .route("/recipe/*path", get(recipe_page))
         .route("/shopping-list", get(shopping_list_page))
         .route("/pantry", get(pantry_page))
         .route("/preferences", get(preferences_page))
+        .route("/api/import-url", post(import_recipe_url))
+        .route("/api/recipe/save", post(save_recipe))
 }
 
 async fn recipes_page(
@@ -763,5 +766,238 @@ async fn preferences_page(State(state): State<Arc<AppState>>) -> impl askama_axu
             .unwrap_or_else(|| "Not configured".to_string()),
         base_path: state.base_path.to_string(),
         version: format!("{} - in food we trust", env!("CARGO_PKG_VERSION")),
+    }
+}
+
+// Recipe form page
+async fn recipe_form_page() -> impl askama_axum::IntoResponse {
+    RecipeFormTemplate {
+        active: "create".to_string(),
+    }
+}
+
+// Import recipe from URL
+#[derive(Deserialize)]
+struct ImportRequest {
+    url: String,
+}
+
+#[derive(Serialize)]
+struct ImportResponse {
+    name: Option<String>,
+    description: Option<String>,
+    servings: Option<String>,
+    prep_time: Option<String>,
+    cook_time: Option<String>,
+    ingredients: Vec<String>,
+    instructions: Vec<String>,
+    tags: Vec<String>,
+}
+
+async fn import_recipe_url(Json(request): Json<ImportRequest>) -> Result<Json<ImportResponse>, StatusCode> {
+    tracing::info!("Importing recipe from URL: {}", request.url);
+
+    // Use the AI-powered import functionality that converts to Cooklang
+    let cooklang_recipe = match cooklang_import::import_recipe(&request.url).await {
+        Ok(r) => {
+            tracing::info!("Successfully imported and converted recipe");
+            r
+        },
+        Err(e) => {
+            tracing::error!("Failed to import recipe from {}: {}", request.url, e);
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
+
+    // Split the Cooklang recipe into parts
+    let parts: Vec<&str> = cooklang_recipe.split("---").collect();
+    
+    let (metadata_yaml, recipe_content) = if parts.len() >= 3 {
+        // YAML frontmatter exists
+        (parts[1], parts[2])
+    } else {
+        // No YAML frontmatter
+        ("", cooklang_recipe.as_str())
+    };
+
+    // Parse YAML metadata if present
+    let metadata: serde_yaml::Value = if !metadata_yaml.trim().is_empty() {
+        serde_yaml::from_str(metadata_yaml.trim()).unwrap_or_default()
+    } else {
+        serde_yaml::Value::Null
+    };
+
+    // Extract metadata fields
+    let get_metadata = |key: &str| -> Option<String> {
+        metadata.get(key).and_then(|v| {
+            if let Some(s) = v.as_str() {
+                Some(s.to_string())
+            } else if let Some(n) = v.as_i64() {
+                Some(n.to_string())
+            } else {
+                v.as_f64().map(|f| f.to_string())
+            }
+        })
+    };
+
+    // Split recipe content into ingredients and instructions
+    let mut ingredients = Vec::new();
+    let mut instructions = Vec::new();
+    let mut in_instructions = false;
+
+    for line in recipe_content.trim().lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            if !ingredients.is_empty() {
+                in_instructions = true;
+            }
+        } else if in_instructions {
+            instructions.push(line.to_string());
+        } else {
+            ingredients.push(line.to_string());
+        }
+    }
+
+    // Convert to our response format
+    let response = ImportResponse {
+        name: get_metadata("title"),
+        description: get_metadata("description"),
+        servings: get_metadata("servings"),
+        prep_time: get_metadata("prep time")
+            .or_else(|| get_metadata("prep_time"))
+            .or_else(|| get_metadata("preptime")),
+        cook_time: get_metadata("cook time")
+            .or_else(|| get_metadata("cook_time"))
+            .or_else(|| get_metadata("cooktime")),
+        ingredients,
+        instructions,
+        tags: get_metadata("tags")
+            .or_else(|| get_metadata("keywords"))
+            .map(|s| s.split(',').map(|tag| tag.trim().to_string()).collect())
+            .unwrap_or_default(),
+    };
+
+    Ok(Json(response))
+}
+
+// Save recipe
+#[derive(Deserialize)]
+struct SaveRecipeForm {
+    name: String,
+    description: Option<String>,
+    servings: Option<String>,
+    prep_time: Option<String>,
+    cook_time: Option<String>,
+    ingredients: String,
+    instructions: String,
+    tags: Option<String>,
+}
+
+async fn save_recipe(
+    State(state): State<Arc<AppState>>,
+    Form(form): Form<SaveRecipeForm>
+) -> Result<impl IntoResponse, StatusCode> {
+    tracing::info!("Saving recipe: {}", form.name);
+
+    if form.name.trim().is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Generate filename from recipe name (keep spaces, just sanitize unsafe characters)
+    let filename = form.name
+        .trim()
+        .replace('/', "_")
+        .replace('\\', "_")
+        .replace(':', "_")     // Windows drive separator
+        .replace('*', "_")     // Illegal on Windows
+        .replace('?', "_")     // Illegal on Windows  
+        .replace('"', "_")     // Quote issues
+        .replace('<', "_")     // Illegal on Windows
+        .replace('>', "_")     // Illegal on Windows
+        .replace('|', "_")     // Illegal on Windows
+        + ".cook";
+    
+    let recipe_path = state.base_path.join(&filename);
+
+    // Build the recipe content in Cooklang format
+    let mut content = String::new();
+
+    // Add YAML frontmatter with metadata
+    content.push_str("---\n");
+    content.push_str(&format!("title: \"{}\"\n", form.name));
+    
+    if let Some(desc) = &form.description {
+        if !desc.trim().is_empty() {
+            content.push_str(&format!("description: \"{}\"\n", desc.trim()));
+        }
+    }
+    
+    if let Some(servings) = &form.servings {
+        if !servings.trim().is_empty() {
+            content.push_str(&format!("servings: {}\n", servings.trim()));
+        }
+    }
+    
+    if let Some(prep) = &form.prep_time {
+        if !prep.trim().is_empty() {
+            content.push_str(&format!("prep time: \"{}\"\n", prep.trim()));
+        }
+    }
+    
+    if let Some(cook) = &form.cook_time {
+        if !cook.trim().is_empty() {
+            content.push_str(&format!("cook time: \"{}\"\n", cook.trim()));
+        }
+    }
+    
+    if let Some(tags) = &form.tags {
+        if !tags.trim().is_empty() {
+            let tag_list: Vec<&str> = tags.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+            if !tag_list.is_empty() {
+                content.push_str("tags:\n");
+                for tag in tag_list {
+                    content.push_str(&format!("  - {}\n", tag));
+                }
+            }
+        }
+    }
+    
+    content.push_str("---\n\n");
+
+    // Add ingredients section
+    if !form.ingredients.trim().is_empty() {
+        for ingredient in form.ingredients.lines() {
+            let ingredient = ingredient.trim();
+            if !ingredient.is_empty() {
+                content.push_str(ingredient);
+                content.push('\n');
+            }
+        }
+        content.push('\n');
+    }
+
+    // Add instructions section
+    if !form.instructions.trim().is_empty() {
+        for instruction in form.instructions.lines() {
+            let instruction = instruction.trim();
+            if !instruction.is_empty() {
+                content.push_str(instruction);
+                content.push('\n');
+            }
+        }
+    }
+
+    // Write the file
+    match std::fs::write(&recipe_path, content) {
+        Ok(()) => {
+            tracing::info!("Recipe saved to: {}", recipe_path);
+            // Redirect to the new recipe page (filename without extension)
+            let redirect_path = format!("/recipe/{}", filename.replace(".cook", ""));
+            Ok(axum::response::Redirect::to(&redirect_path).into_response())
+        }
+        Err(e) => {
+            tracing::error!("Failed to save recipe: {:?}", e);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }

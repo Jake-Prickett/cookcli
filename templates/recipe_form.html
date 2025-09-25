@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block title %}Create Recipe - Cook{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Create Recipe</h1>
+
+    <!-- URL Import Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold mb-4 flex items-center">
+            <span class="mr-2">🔗</span>
+            Import from URL
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            Paste a recipe URL to automatically fill in the fields below. Works with most popular recipe sites.
+        </p>
+        <div class="flex gap-3">
+            <input type="url" 
+                   id="import-url" 
+                   placeholder="https://example.com/recipe..." 
+                   class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+            <button type="button" 
+                    onclick="importFromUrl()" 
+                    id="import-btn"
+                    class="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                <span id="import-text">Import</span>
+                <div id="import-spinner" class="hidden ml-2">
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+            </button>
+        </div>
+        <div id="import-error" class="hidden mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-300 text-sm"></div>
+        <div id="import-success" class="hidden mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md text-green-700 dark:text-green-300 text-sm"></div>
+    </div>
+
+    <!-- Recipe Form -->
+    <form id="recipe-form" action="/api/recipe/save" method="POST" class="space-y-6">
+        <!-- Basic Info -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="mr-2">✏️</span>
+                Recipe Details
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="recipe-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Recipe Name *
+                    </label>
+                    <input type="text" 
+                           id="recipe-name" 
+                           name="name"
+                           required
+                           placeholder="My Delicious Recipe"
+                           class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+                </div>
+
+                <div>
+                    <label for="recipe-description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Description
+                    </label>
+                    <textarea id="recipe-description" 
+                              name="description"
+                              rows="3"
+                              placeholder="A brief description of your recipe..."
+                              class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="recipe-servings" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Servings
+                        </label>
+                        <input type="number" 
+                               id="recipe-servings" 
+                               name="servings"
+                               min="1"
+                               placeholder="4"
+                               class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+                    </div>
+                    <div>
+                        <label for="recipe-prep-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Prep Time
+                        </label>
+                        <input type="text" 
+                               id="recipe-prep-time" 
+                               name="prep_time"
+                               placeholder="15 minutes"
+                               class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+                    </div>
+                    <div>
+                        <label for="recipe-cook-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Cook Time
+                        </label>
+                        <input type="text" 
+                               id="recipe-cook-time" 
+                               name="cook_time"
+                               placeholder="30 minutes"
+                               class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ingredients -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="mr-2">🥕</span>
+                Ingredients
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Use <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">@ingredient</code> for ingredients. One per line.
+            </p>
+            <textarea id="recipe-ingredients" 
+                      name="ingredients"
+                      rows="8"
+                      placeholder="2 cups @flour&#10;1 tsp salt&#10;3 @eggs&#10;1 cup @milk"
+                      class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400 font-mono text-sm"></textarea>
+        </div>
+
+        <!-- Instructions -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="mr-2">👨‍🍳</span>
+                Instructions
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Use <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">#cookware</code> for cookware and <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">~{time%unit}</code> for timers. One step per line.
+            </p>
+            <textarea id="recipe-instructions" 
+                      name="instructions"
+                      rows="8"
+                      placeholder="Mix dry ingredients in large #bowl&#10;Whisk together wet ingredients&#10;Combine wet and dry, mix until smooth&#10;Cook for ~{10%minutes} until golden"
+                      class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400 font-mono text-sm"></textarea>
+        </div>
+
+        <!-- Tags -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <span class="mr-2">🏷️</span>
+                Tags
+            </h3>
+            <input type="text" 
+                   id="recipe-tags" 
+                   name="tags"
+                   placeholder="breakfast, easy, vegetarian"
+                   class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-purple-500 focus:ring-purple-500 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Separate tags with commas
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 pt-6">
+            <button type="submit" 
+                    class="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white px-6 py-3 rounded-md font-medium transition-colors flex items-center">
+                <span class="mr-2">💾</span>
+                Save Recipe
+            </button>
+            <button type="button" 
+                    onclick="previewRecipe()" 
+                    class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-3 rounded-md font-medium transition-colors flex items-center">
+                <span class="mr-2">👀</span>
+                Preview
+            </button>
+            <a href="/" 
+               class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 text-white px-6 py-3 rounded-md font-medium transition-colors inline-flex items-center">
+                <span class="mr-2">❌</span>
+                Cancel
+            </a>
+        </div>
+    </form>
+
+    <!-- Preview Modal (hidden by default) -->
+    <div id="preview-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 class="text-xl font-semibold">Recipe Preview</h2>
+                <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="preview-content" class="p-6">
+                <!-- Preview content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-save to localStorage
+function autoSave() {
+    const formData = {
+        name: document.getElementById('recipe-name').value,
+        description: document.getElementById('recipe-description').value,
+        servings: document.getElementById('recipe-servings').value,
+        prep_time: document.getElementById('recipe-prep-time').value,
+        cook_time: document.getElementById('recipe-cook-time').value,
+        ingredients: document.getElementById('recipe-ingredients').value,
+        instructions: document.getElementById('recipe-instructions').value,
+        tags: document.getElementById('recipe-tags').value
+    };
+    localStorage.setItem('recipe_draft', JSON.stringify(formData));
+}
+
+// Load draft on page load
+function loadDraft() {
+    const draft = localStorage.getItem('recipe_draft');
+    if (draft) {
+        const data = JSON.parse(draft);
+        Object.keys(data).forEach(key => {
+            const element = document.getElementById('recipe-' + key);
+            if (element && data[key]) {
+                element.value = data[key];
+            }
+        });
+    }
+}
+
+// URL import functionality
+async function importFromUrl() {
+    const url = document.getElementById('import-url').value;
+    if (!url) return;
+
+    const importBtn = document.getElementById('import-btn');
+    const importText = document.getElementById('import-text');
+    const importSpinner = document.getElementById('import-spinner');
+    const importError = document.getElementById('import-error');
+    const importSuccess = document.getElementById('import-success');
+
+    // Reset states
+    importError.classList.add('hidden');
+    importSuccess.classList.add('hidden');
+    
+    // Show loading state
+    importBtn.disabled = true;
+    importText.textContent = 'Importing...';
+    importSpinner.classList.remove('hidden');
+
+    try {
+        const response = await fetch('/api/import-url', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to import recipe: ${response.statusText}`);
+        }
+
+        const recipe = await response.json();
+        populateForm(recipe);
+        
+        importSuccess.textContent = 'Recipe imported successfully! You can now edit the fields below.';
+        importSuccess.classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Import error:', error);
+        importError.textContent = error.message || 'Failed to import recipe. Please check the URL and try again.';
+        importError.classList.remove('hidden');
+    } finally {
+        // Reset button state
+        importBtn.disabled = false;
+        importText.textContent = 'Import';
+        importSpinner.classList.add('hidden');
+    }
+}
+
+// Populate form with imported recipe data
+function populateForm(recipe) {
+    if (recipe.name) document.getElementById('recipe-name').value = recipe.name;
+    if (recipe.description) document.getElementById('recipe-description').value = recipe.description;
+    if (recipe.servings) document.getElementById('recipe-servings').value = recipe.servings;
+    if (recipe.prep_time) document.getElementById('recipe-prep-time').value = recipe.prep_time;
+    if (recipe.cook_time) document.getElementById('recipe-cook-time').value = recipe.cook_time;
+    
+    if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+        document.getElementById('recipe-ingredients').value = recipe.ingredients.join('\n');
+    }
+    
+    if (recipe.instructions && Array.isArray(recipe.instructions)) {
+        document.getElementById('recipe-instructions').value = recipe.instructions.join('\n');
+    }
+    
+    if (recipe.tags && Array.isArray(recipe.tags)) {
+        document.getElementById('recipe-tags').value = recipe.tags.join(', ');
+    }
+    
+    // Auto-save after import
+    autoSave();
+}
+
+// Preview functionality
+function previewRecipe() {
+    const formData = new FormData(document.getElementById('recipe-form'));
+    const preview = generatePreview(formData);
+    
+    document.getElementById('preview-content').innerHTML = preview;
+    document.getElementById('preview-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// Generate preview HTML
+function generatePreview(formData) {
+    const name = formData.get('name') || 'Untitled Recipe';
+    const description = formData.get('description') || '';
+    const servings = formData.get('servings') || '';
+    const prepTime = formData.get('prep_time') || '';
+    const cookTime = formData.get('cook_time') || '';
+    const ingredients = formData.get('ingredients') || '';
+    const instructions = formData.get('instructions') || '';
+    const tags = formData.get('tags') || '';
+
+    let html = `<h1 class="text-2xl font-bold mb-4">${name}</h1>`;
+    
+    if (description) {
+        html += `<p class="text-gray-600 dark:text-gray-400 mb-4">${description}</p>`;
+    }
+    
+    if (servings || prepTime || cookTime) {
+        html += '<div class="flex gap-4 mb-6">';
+        if (servings) html += `<span class="metadata-pill metadata-servings">🍽️ ${servings} servings</span>`;
+        if (prepTime) html += `<span class="metadata-pill metadata-time">⏱️ ${prepTime} prep</span>`;
+        if (cookTime) html += `<span class="metadata-pill metadata-time">🔥 ${cookTime} cook</span>`;
+        html += '</div>';
+    }
+    
+    if (ingredients) {
+        html += '<h2 class="text-xl font-semibold mb-3">Ingredients</h2>';
+        html += '<ul class="space-y-1 mb-6">';
+        ingredients.split('\n').forEach(ingredient => {
+            if (ingredient.trim()) {
+                html += `<li class="flex items-center"><span class="w-2 h-2 bg-orange-400 rounded-full mr-3 flex-shrink-0"></span>${ingredient.trim()}</li>`;
+            }
+        });
+        html += '</ul>';
+    }
+    
+    if (instructions) {
+        html += '<h2 class="text-xl font-semibold mb-3">Instructions</h2>';
+        html += '<ol class="space-y-3 mb-6">';
+        instructions.split('\n').forEach((instruction, index) => {
+            if (instruction.trim()) {
+                html += `<li class="flex items-start"><span class="step-number mr-4 mt-0.5">${index + 1}</span><span>${instruction.trim()}</span></li>`;
+            }
+        });
+        html += '</ol>';
+    }
+    
+    if (tags) {
+        html += '<div class="mb-4">';
+        tags.split(',').forEach(tag => {
+            if (tag.trim()) {
+                html += `<span class="tag">${tag.trim()}</span>`;
+            }
+        });
+        html += '</div>';
+    }
+    
+    return html;
+}
+
+// Set up auto-save on form inputs
+document.addEventListener('DOMContentLoaded', function() {
+    loadDraft();
+    
+    // Add auto-save listeners to all form inputs
+    ['recipe-name', 'recipe-description', 'recipe-servings', 'recipe-prep-time', 'recipe-cook-time', 'recipe-ingredients', 'recipe-instructions', 'recipe-tags'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', autoSave);
+        }
+    });
+
+    // Clear draft on successful save
+    document.getElementById('recipe-form').addEventListener('submit', function() {
+        localStorage.removeItem('recipe_draft');
+    });
+
+    // Close preview modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePreview();
+        }
+    });
+});
+</script>
+{% endblock %}

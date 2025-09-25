@@ -443,6 +443,9 @@
                         <a href="/" class="{% if active == "recipes" %}bg-gray-900 text-white dark:bg-gray-600{% else %}text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white{% endif %} px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Recipes
                         </a>
+                        <a href="/recipe/new" class="{% if active == "create" %}bg-gray-900 text-white dark:bg-gray-600{% else %}text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white{% endif %} px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Create Recipe
+                        </a>
                         <a href="/shopping-list" class="{% if active == "shopping" %}bg-gray-900 text-white dark:bg-gray-600{% else %}text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white{% endif %} px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             Shopping List
                         </a>
@@ -517,6 +520,9 @@
                         <!-- Mobile navigation links -->
                         <a href="/" class="{% if active == "recipes" %}bg-gray-900 text-white dark:bg-gray-600{% else %}text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white{% endif %} block px-3 py-3 rounded-md font-medium transition-colors">
                             🏠 Recipes
+                        </a>
+                        <a href="/recipe/new" class="{% if active == "create" %}bg-gray-900 text-white dark:bg-gray-600{% else %}text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white{% endif %} block px-3 py-3 rounded-md font-medium transition-colors">
+                            ✏️ Create Recipe
                         </a>
                         <a href="/shopping-list" class="{% if active == "shopping" %}bg-gray-900 text-white dark:bg-gray-600{% else %}text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white{% endif %} block px-3 py-3 rounded-md font-medium transition-colors">
                             🛒 Shopping List
