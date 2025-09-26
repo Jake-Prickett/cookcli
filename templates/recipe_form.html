@@ -35,10 +35,38 @@
         </div>
         <div id="import-error" class="hidden mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-300 text-sm"></div>
         <div id="import-success" class="hidden mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md text-green-700 dark:text-green-300 text-sm"></div>
+        
+        <!-- Image Preview -->
+        <div id="image-preview" class="hidden mt-4 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Recipe Image</span>
+                <button type="button" onclick="hideImagePreview()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <img id="preview-image" src="" alt="Recipe preview" class="max-w-full h-48 object-cover rounded">
+        </div>
     </div>
 
-    <!-- Recipe Form -->
-    <form id="recipe-form" action="/api/recipe/save" method="POST" class="space-y-6">
+    <!-- Manual Entry Toggle -->
+    <div class="mb-6">
+        <button type="button" onclick="toggleManualEntry()" id="manual-toggle" 
+                class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md font-medium transition-colors flex items-center">
+            <span class="mr-2">✏️</span>
+            <span id="manual-toggle-text">Show Manual Entry Form</span>
+            <svg id="manual-toggle-icon" class="ml-2 w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Use this form to manually create recipes or edit imported ones.
+        </p>
+    </div>
+
+    <!-- Recipe Form (initially hidden) -->
+    <form id="recipe-form" action="/api/recipe/save" method="POST" class="space-y-6 hidden">
         <!-- Basic Info -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-semibold mb-4 flex items-center">
@@ -153,6 +181,9 @@
                 Separate tags with commas
             </p>
         </div>
+
+        <!-- Hidden field for image URL -->
+        <input type="hidden" id="recipe-image-url" name="image_url" value="">
 
         <!-- Action Buttons -->
         <div class="flex gap-4 pt-6">
@@ -296,8 +327,53 @@ function populateForm(recipe) {
         document.getElementById('recipe-tags').value = recipe.tags.join(', ');
     }
     
+    // Show image preview if available and set hidden field
+    if (recipe.image_url) {
+        showImagePreview(recipe.image_url);
+        document.getElementById('recipe-image-url').value = recipe.image_url;
+    }
+    
+    // Show the manual entry form after import so user can edit
+    const form = document.getElementById('recipe-form');
+    if (form.classList.contains('hidden')) {
+        toggleManualEntry();
+    }
+    
     // Auto-save after import
     autoSave();
+}
+
+// Image preview functions
+function showImagePreview(imageUrl) {
+    const preview = document.getElementById('image-preview');
+    const image = document.getElementById('preview-image');
+    
+    image.src = imageUrl;
+    preview.classList.remove('hidden');
+}
+
+function hideImagePreview() {
+    const preview = document.getElementById('image-preview');
+    preview.classList.add('hidden');
+}
+
+// Toggle manual entry form
+function toggleManualEntry() {
+    const form = document.getElementById('recipe-form');
+    const toggleText = document.getElementById('manual-toggle-text');
+    const toggleIcon = document.getElementById('manual-toggle-icon');
+    
+    const isHidden = form.classList.contains('hidden');
+    
+    if (isHidden) {
+        form.classList.remove('hidden');
+        toggleText.textContent = 'Hide Manual Entry Form';
+        toggleIcon.style.transform = 'rotate(180deg)';
+    } else {
+        form.classList.add('hidden');
+        toggleText.textContent = 'Show Manual Entry Form';
+        toggleIcon.style.transform = 'rotate(0deg)';
+    }
 }
 
 // Preview functionality
@@ -375,9 +451,95 @@ function generatePreview(formData) {
     return html;
 }
 
+// Check if we're editing a recipe and load its data
+async function loadRecipeForEditing() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editRecipe = urlParams.get('edit');
+    
+    if (editRecipe) {
+        try {
+            // Show the form immediately since we're editing
+            const form = document.getElementById('recipe-form');
+            if (form.classList.contains('hidden')) {
+                toggleManualEntry();
+            }
+            
+            // Update page title to indicate editing
+            document.title = 'Edit Recipe - Cook';
+            const pageTitle = document.querySelector('h1');
+            if (pageTitle) {
+                pageTitle.textContent = 'Edit Recipe';
+            }
+            
+            // Fetch the recipe data from the API
+            const response = await fetch(`/api/recipe/${editRecipe}/data`);
+            if (response.ok) {
+                const recipeData = await response.json();
+                populateFormFromRecipe(recipeData);
+                
+                // Update the page title with the recipe name
+                if (recipeData.name) {
+                    document.title = `Edit ${recipeData.name} - Cook`;
+                    if (pageTitle) {
+                        pageTitle.textContent = `Edit "${recipeData.name}"`;
+                    }
+                }
+                
+                // Show success message
+                const importSuccess = document.getElementById('import-success');
+                if (importSuccess) {
+                    importSuccess.textContent = 'Recipe loaded for editing. Make your changes below.';
+                    importSuccess.classList.remove('hidden');
+                    // Hide the success message after 3 seconds
+                    setTimeout(() => {
+                        importSuccess.classList.add('hidden');
+                    }, 3000);
+                }
+            } else {
+                throw new Error(`Failed to load recipe: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Failed to load recipe for editing:', error);
+            const importError = document.getElementById('import-error');
+            if (importError) {
+                importError.textContent = `Failed to load recipe for editing: ${error.message}`;
+                importError.classList.remove('hidden');
+            }
+        }
+    }
+}
+
+function populateFormFromRecipe(recipeData) {
+    if (recipeData.name) document.getElementById('recipe-name').value = recipeData.name;
+    if (recipeData.description) document.getElementById('recipe-description').value = recipeData.description;
+    if (recipeData.servings) document.getElementById('recipe-servings').value = recipeData.servings;
+    if (recipeData.prep_time) document.getElementById('recipe-prep-time').value = recipeData.prep_time;
+    if (recipeData.cook_time) document.getElementById('recipe-cook-time').value = recipeData.cook_time;
+    
+    // For Cooklang format, put the full content in instructions and leave ingredients empty
+    if (recipeData.instructions) document.getElementById('recipe-instructions').value = recipeData.instructions;
+    if (recipeData.ingredients) document.getElementById('recipe-ingredients').value = recipeData.ingredients;
+    
+    if (recipeData.tags && Array.isArray(recipeData.tags)) {
+        document.getElementById('recipe-tags').value = recipeData.tags.join(', ');
+    }
+    if (recipeData.image_url) {
+        document.getElementById('recipe-image-url').value = recipeData.image_url;
+        showImagePreview(recipeData.image_url);
+    }
+    
+    // Handle source URL - populate the import URL field if available
+    if (recipeData.source_url) {
+        document.getElementById('import-url').value = recipeData.source_url;
+    }
+    
+    autoSave();
+}
+
 // Set up auto-save on form inputs
 document.addEventListener('DOMContentLoaded', function() {
     loadDraft();
+    loadRecipeForEditing();
     
     // Add auto-save listeners to all form inputs
     ['recipe-name', 'recipe-description', 'recipe-servings', 'recipe-prep-time', 'recipe-cook-time', 'recipe-ingredients', 'recipe-instructions', 'recipe-tags'].forEach(id => {

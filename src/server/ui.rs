@@ -21,6 +21,7 @@ pub fn ui() -> Router<Arc<AppState>> {
         .route("/preferences", get(preferences_page))
         .route("/api/import-url", post(import_recipe_url))
         .route("/api/recipe/save", post(save_recipe))
+        .route("/api/recipe/:path/data", get(get_recipe_data))
 }
 
 async fn recipes_page(
@@ -770,10 +771,22 @@ async fn preferences_page(State(state): State<Arc<AppState>>) -> impl askama_axu
 }
 
 // Recipe form page
-async fn recipe_form_page() -> impl askama_axum::IntoResponse {
-    RecipeFormTemplate {
+#[derive(Deserialize)]
+struct RecipeFormQuery {
+    edit: Option<String>,
+}
+
+async fn recipe_form_page(
+    Query(query): Query<RecipeFormQuery>,
+    State(_state): State<Arc<AppState>>,
+) -> Result<impl askama_axum::IntoResponse, StatusCode> {
+    // If editing, we could pre-populate form data here in the future
+    // For now, we'll handle it on the frontend via JavaScript
+    let _editing_recipe = query.edit.as_deref();
+    
+    Ok(RecipeFormTemplate {
         active: "create".to_string(),
-    }
+    })
 }
 
 // Import recipe from URL
@@ -792,24 +805,37 @@ struct ImportResponse {
     ingredients: Vec<String>,
     instructions: Vec<String>,
     tags: Vec<String>,
+    image_url: Option<String>,
 }
 
 async fn import_recipe_url(Json(request): Json<ImportRequest>) -> Result<Json<ImportResponse>, StatusCode> {
     tracing::info!("Importing recipe from URL: {}", request.url);
 
-    // Use the AI-powered import functionality that converts to Cooklang
-    let cooklang_recipe = match cooklang_import::import_recipe(&request.url).await {
+    // First get the raw recipe data for images and metadata
+    let raw_recipe = match cooklang_import::fetch_recipe(&request.url).await {
         Ok(r) => {
-            tracing::info!("Successfully imported and converted recipe");
+            tracing::info!("Successfully fetched raw recipe data");
             r
         },
         Err(e) => {
-            tracing::error!("Failed to import recipe from {}: {}", request.url, e);
+            tracing::error!("Failed to fetch recipe from {}: {}", request.url, e);
             return Err(StatusCode::BAD_REQUEST);
         }
     };
 
-    // Split the Cooklang recipe into parts
+    // Get the AI-converted cooklang format
+    let cooklang_recipe = match cooklang_import::import_recipe(&request.url).await {
+        Ok(r) => {
+            tracing::info!("Successfully imported and converted recipe to cooklang");
+            r
+        },
+        Err(e) => {
+            tracing::error!("Failed to convert recipe to cooklang from {}: {}", request.url, e);
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    };
+
+    // Parse the cooklang content to extract structured data
     let parts: Vec<&str> = cooklang_recipe.split("---").collect();
     
     let (metadata_yaml, recipe_content) = if parts.len() >= 3 {
@@ -840,7 +866,7 @@ async fn import_recipe_url(Json(request): Json<ImportRequest>) -> Result<Json<Im
         })
     };
 
-    // Split recipe content into ingredients and instructions
+    // Parse the cooklang recipe content into ingredients and instructions
     let mut ingredients = Vec::new();
     let mut instructions = Vec::new();
     let mut in_instructions = false;
@@ -848,15 +874,19 @@ async fn import_recipe_url(Json(request): Json<ImportRequest>) -> Result<Json<Im
     for line in recipe_content.trim().lines() {
         let line = line.trim();
         if line.is_empty() {
-            if !ingredients.is_empty() {
+            if !ingredients.is_empty() && !in_instructions {
                 in_instructions = true;
             }
         } else if in_instructions {
             instructions.push(line.to_string());
         } else {
+            // This is an ingredient line - keep cooklang markup
             ingredients.push(line.to_string());
         }
     }
+
+    // Get the first image URL from the raw recipe data
+    let image_url = raw_recipe.image.first().cloned();
 
     // Convert to our response format
     let response = ImportResponse {
@@ -875,6 +905,108 @@ async fn import_recipe_url(Json(request): Json<ImportRequest>) -> Result<Json<Im
             .or_else(|| get_metadata("keywords"))
             .map(|s| s.split(',').map(|tag| tag.trim().to_string()).collect())
             .unwrap_or_default(),
+        image_url,
+    };
+
+    Ok(Json(response))
+}
+
+// Get recipe data for editing
+#[derive(Serialize)]
+struct RecipeDataResponse {
+    name: String,
+    description: Option<String>,
+    servings: Option<String>,
+    prep_time: Option<String>,
+    cook_time: Option<String>,
+    ingredients: String,
+    instructions: String,
+    tags: Vec<String>,
+    image_url: Option<String>,
+    source_url: Option<String>,
+}
+
+async fn get_recipe_data(
+    Path(path): Path<String>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<RecipeDataResponse>, StatusCode> {
+    let recipe_path = Utf8PathBuf::from(&path);
+    
+    let entry = cooklang_find::get_recipe(vec![&state.base_path], &recipe_path).map_err(|_| {
+        tracing::error!("Recipe not found for editing: {path}");
+        StatusCode::NOT_FOUND
+    })?;
+
+    let recipe_content = entry.content().map_err(|e| {
+        tracing::error!("Failed to read recipe content: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Parse the recipe content to extract metadata and content
+    let parts: Vec<&str> = recipe_content.split("---").collect();
+    
+    let (metadata_yaml, recipe_body) = if parts.len() >= 3 {
+        (parts[1], parts[2])
+    } else {
+        ("", recipe_content.as_str())
+    };
+
+    // Parse YAML metadata
+    let metadata: serde_yaml::Value = if !metadata_yaml.trim().is_empty() {
+        serde_yaml::from_str(metadata_yaml.trim()).unwrap_or_default()
+    } else {
+        serde_yaml::Value::Null
+    };
+
+    let get_metadata = |key: &str| -> Option<String> {
+        metadata.get(key).and_then(|v| v.as_str()).map(|s| s.to_string())
+    };
+
+    let get_tags = || -> Vec<String> {
+        if let Some(tags_value) = metadata.get("tags") {
+            if let Some(tags_array) = tags_value.as_sequence() {
+                return tags_array
+                    .iter()
+                    .filter_map(|tag| tag.as_str())
+                    .map(|s| s.to_string())
+                    .collect();
+            } else if let Some(tags_str) = tags_value.as_str() {
+                return tags_str.split(',').map(|s| s.trim().to_string()).collect();
+            }
+        }
+        Vec::new()
+    };
+
+    // For Cooklang format, the recipe body contains the instructions with inline ingredients
+    // We'll return the raw content and let the frontend handle any parsing/display
+    let response = RecipeDataResponse {
+        name: get_metadata("title").unwrap_or_else(|| {
+            path.split('/')
+                .next_back()
+                .unwrap_or(&path)
+                .replace(".cook", "")
+        }),
+        description: get_metadata("description"),
+        servings: get_metadata("servings").or_else(|| {
+            metadata.get("servings").and_then(|v| {
+                if let Some(n) = v.as_i64() {
+                    Some(n.to_string())
+                } else {
+                    v.as_f64().map(|f| f.to_string())
+                }
+            })
+        }),
+        prep_time: get_metadata("prep time")
+            .or_else(|| get_metadata("prep_time"))
+            .or_else(|| get_metadata("preptime")),
+        cook_time: get_metadata("cook time")
+            .or_else(|| get_metadata("cook_time"))
+            .or_else(|| get_metadata("cooktime")),
+        ingredients: String::new(), // Leave empty for Cooklang format since ingredients are inline
+        instructions: recipe_body.trim().to_string(), // Return the full recipe body
+        tags: get_tags(),
+        image_url: get_metadata("image"),
+        source_url: get_metadata("source").or_else(|| get_metadata("source_url")),
     };
 
     Ok(Json(response))
@@ -891,6 +1023,7 @@ struct SaveRecipeForm {
     ingredients: String,
     instructions: String,
     tags: Option<String>,
+    image_url: Option<String>,
 }
 
 async fn save_recipe(
@@ -962,6 +1095,12 @@ async fn save_recipe(
         }
     }
     
+    if let Some(image) = &form.image_url {
+        if !image.trim().is_empty() {
+            content.push_str(&format!("image: \"{}\"\n", image.trim()));
+        }
+    }
+    
     content.push_str("---\n\n");
 
     // Add ingredients section
@@ -976,14 +1115,43 @@ async fn save_recipe(
         content.push('\n');
     }
 
-    // Add instructions section
+    // Add instructions section - each line becomes a separate step
     if !form.instructions.trim().is_empty() {
-        for instruction in form.instructions.lines() {
-            let instruction = instruction.trim();
-            if !instruction.is_empty() {
-                content.push_str(instruction);
+        let mut first_step = true;
+        
+        for line in form.instructions.lines() {
+            let line = line.trim();
+            if !line.is_empty() {
+                // Add a blank line before each step (except the first)
+                if !first_step {
+                    content.push('\n');
+                }
+                content.push_str(line);
                 content.push('\n');
+                first_step = false;
             }
+        }
+        
+        // Add final newline if we added any steps
+        if !first_step {
+            content.push('\n');
+        }
+    }
+
+    // Validate the recipe content using the cooklang parser before saving
+    let validation_result = crate::util::PARSER.parse(&content);
+    if validation_result.report().has_errors() {
+        tracing::error!("Recipe validation failed with errors:");
+        for error in validation_result.report().errors() {
+            tracing::error!("  - {}", error);
+        }
+        // Still save the file but log warnings - let users save invalid recipes for editing
+    }
+    
+    if validation_result.report().has_warnings() {
+        tracing::warn!("Recipe has warnings:");
+        for warning in validation_result.report().warnings() {
+            tracing::warn!("  - {}", warning);
         }
     }
 

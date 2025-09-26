@@ -58,13 +58,13 @@
                     <span class="hidden sm:inline">Add to List</span>
                     <span class="sm:hidden">Add</span>
                 </button>
-                <button onclick="window.print()"
-                        class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm font-medium print:hidden min-h-[44px]">
+                <a href="/recipe/new?edit={{ recipe_path }}"
+                   class="px-3 sm:px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm font-medium print:hidden min-h-[44px]">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
-                    <span class="hidden sm:inline">Print</span>
-                </button>
+                    <span class="hidden sm:inline">Edit</span>
+                </a>
             </div>
         </div>
 
@@ -91,31 +91,11 @@
             {% when None %}
             {% endmatch %}
 
-            <!-- Metadata row -->
-            <div id="metadata-container" class="flex flex-wrap gap-3">
-                <!-- Display all metadata items -->
-
+            <!-- Essential metadata row (always visible) -->
+            <div id="essential-metadata" class="flex flex-wrap gap-3 mb-3">
                 {% match metadata.servings %}
                 {% when Some with (servings) %}
                 <span class="metadata-pill metadata-servings">👥 {{ servings }} servings</span>
-                {% when None %}
-                {% endmatch %}
-
-                {% match metadata.time %}
-                {% when Some with (time) %}
-                <span class="metadata-pill metadata-time">⏱️ {{ time }}</span>
-                {% when None %}
-                {% endmatch %}
-
-                {% match metadata.difficulty %}
-                {% when Some with (difficulty) %}
-                <span class="metadata-pill metadata-difficulty">📊 {{ difficulty }}</span>
-                {% when None %}
-                {% endmatch %}
-
-                {% match metadata.course %}
-                {% when Some with (course) %}
-                <span class="metadata-pill metadata-course">🍽️ {{ course }}</span>
                 {% when None %}
                 {% endmatch %}
 
@@ -131,29 +111,94 @@
                 {% when None %}
                 {% endmatch %}
 
-                {% match metadata.cuisine %}
-                {% when Some with (cuisine) %}
-                <span class="metadata-pill metadata-cuisine">🌍 {{ cuisine }}</span>
+                {% match metadata.time %}
+                {% when Some with (time) %}
+                <span class="metadata-pill metadata-time">⏱️ Total: {{ time }}</span>
                 {% when None %}
                 {% endmatch %}
-
-                {% match metadata.diet %}
-                {% when Some with (diet) %}
-                <span class="metadata-pill metadata-diet">🥗 {{ diet }}</span>
-                {% when None %}
-                {% endmatch %}
-
-                {% match metadata.author %}
-                {% when Some with (author) %}
-                <span class="metadata-pill metadata-author">👤 {{ author }}</span>
-                {% when None %}
-                {% endmatch %}
-
-                <!-- Custom metadata -->
-                {% for (key, value) in metadata.custom %}
-                <span class="metadata-pill metadata-custom">{{ key }}: {{ value }}</span>
-                {% endfor %}
             </div>
+
+            <!-- Collapsible metadata section -->
+            {% set has_additional_metadata = metadata.difficulty.is_some() || metadata.course.is_some() || metadata.cuisine.is_some() || metadata.diet.is_some() || metadata.author.is_some() || !metadata.custom.is_empty() %}
+            {% if has_additional_metadata %}
+            <div class="metadata-section">
+                <button 
+                    onclick="toggleMetadata()" 
+                    class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors print:hidden mb-2"
+                    id="metadata-toggle">
+                    <svg class="w-4 h-4 transform transition-transform duration-200" id="metadata-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                    <span id="metadata-toggle-text">Show additional details</span>
+                </button>
+                
+                <!-- Additional metadata (initially hidden) -->
+                <div id="additional-metadata" class="hidden print:block overflow-hidden transition-all duration-300">
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {% match metadata.difficulty %}
+                            {% when Some with (difficulty) %}
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 text-sm">📊 Difficulty:</span>
+                                <span class="metadata-pill metadata-difficulty">{{ difficulty }}</span>
+                            </div>
+                            {% when None %}
+                            {% endmatch %}
+
+                            {% match metadata.course %}
+                            {% when Some with (course) %}
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 text-sm">🍽️ Course:</span>
+                                <span class="metadata-pill metadata-course">{{ course }}</span>
+                            </div>
+                            {% when None %}
+                            {% endmatch %}
+
+                            {% match metadata.cuisine %}
+                            {% when Some with (cuisine) %}
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 text-sm">🌍 Cuisine:</span>
+                                <span class="metadata-pill metadata-cuisine">{{ cuisine }}</span>
+                            </div>
+                            {% when None %}
+                            {% endmatch %}
+
+                            {% match metadata.diet %}
+                            {% when Some with (diet) %}
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 text-sm">🥗 Diet:</span>
+                                <span class="metadata-pill metadata-diet">{{ diet }}</span>
+                            </div>
+                            {% when None %}
+                            {% endmatch %}
+
+                            {% match metadata.author %}
+                            {% when Some with (author) %}
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 text-sm">👤 Author:</span>
+                                <span class="metadata-pill metadata-author">{{ author }}</span>
+                            </div>
+                            {% when None %}
+                            {% endmatch %}
+                        </div>
+
+                        <!-- Custom metadata -->
+                        {% if !metadata.custom.is_empty() %}
+                        <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {% for (key, value) in metadata.custom %}
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-500 text-sm">{{ key }}:</span>
+                                    <span class="metadata-pill metadata-custom">{{ value }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             {% when None %}
             {% endmatch %}
@@ -338,5 +383,47 @@ async function addToShoppingList(event, recipePath) {
         alert('Failed to add to shopping list');
     }
 }
+
+function toggleMetadata() {
+    const additionalMetadata = document.getElementById('additional-metadata');
+    const chevron = document.getElementById('metadata-chevron');
+    const toggleText = document.getElementById('metadata-toggle-text');
+    
+    if (additionalMetadata.classList.contains('hidden')) {
+        // Show additional metadata
+        additionalMetadata.classList.remove('hidden');
+        chevron.style.transform = 'rotate(180deg)';
+        toggleText.textContent = 'Hide additional details';
+        
+        // Store preference in localStorage
+        localStorage.setItem('metadata-expanded', 'true');
+    } else {
+        // Hide additional metadata
+        additionalMetadata.classList.add('hidden');
+        chevron.style.transform = 'rotate(0deg)';
+        toggleText.textContent = 'Show additional details';
+        
+        // Store preference in localStorage
+        localStorage.setItem('metadata-expanded', 'false');
+    }
+}
+
+// Load user preference on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const metadataExpanded = localStorage.getItem('metadata-expanded');
+    
+    // If user previously expanded metadata, keep it expanded
+    if (metadataExpanded === 'true') {
+        const additionalMetadata = document.getElementById('additional-metadata');
+        const chevron = document.getElementById('metadata-chevron');
+        const toggleText = document.getElementById('metadata-toggle-text');
+        
+        if (additionalMetadata && chevron && toggleText) {
+            additionalMetadata.classList.remove('hidden');
+            chevron.style.transform = 'rotate(180deg)';
+            toggleText.textContent = 'Hide additional details';
+        }
+    }
+});
 </script>
 {% endblock %}

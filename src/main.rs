@@ -58,6 +58,8 @@ const AUTO_AISLE: &str = "aisle.conf";
 const AUTO_PANTRY: &str = "pantry.conf";
 
 pub fn main() -> Result<()> {
+    dotenvy::dotenv().ok();
+    
     let args = CliArgs::parse();
     configure_logging(args.verbosity);
 

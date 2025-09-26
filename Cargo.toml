@@ -36,6 +36,7 @@ cooklang-find = { version = "0.4.0" }
 cooklang-import = "0.6.0"
 cooklang-reports = { version = "0.2" }
 directories = "6"
+dotenvy = "0.15"
 humantime = "2"
 mime_guess = "2.0"
 once_cell = "1"

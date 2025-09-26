@@ -1,32 +1,50 @@
-FROM docker.io/alpine:latest
+# Multi-stage build for cross-architecture support (AMD64 + ARM64)
+FROM rust:1.90-alpine AS builder
 
-#Set download URL (customize if not using amd64 CPU)
-ARG DOWNLOAD_URL="https://github.com/cooklang/cookcli/releases/latest/download/cook-x86_64-unknown-linux-musl.tar.gz"
+# Install build dependencies
+RUN apk add --no-cache \
+    musl-dev \
+    nodejs \
+    npm \
+    make \
+    pkgconfig \
+    openssl-dev \
+    perl
 
-RUN apk upgrade --no-cache
+WORKDIR /app
 
-#Add data dir (mount volume with your recipes and config dir here)
-RUN mkdir /data --mode=555
-WORKDIR /data
+# Copy source code
+COPY . .
 
-#Add cookcli binary
-ADD ${DOWNLOAD_URL} .
+# Build CSS and Rust binary
+RUN npm install && \
+    npm run build-css && \
+    cargo build --release
 
-#Untar binary
-RUN tar -xvf cook-*
+# Runtime stage - minimal Alpine image  
+FROM alpine:latest
 
-#Remove tar
-RUN rm *.tar.gz
+# Install runtime dependencies and upgrade
+RUN apk add --no-cache ca-certificates && \
+    apk upgrade --no-cache
 
-#Install binary
-RUN mv cook /bin/cook && chmod 555 /bin/cook && chown root /bin/cook && chgrp root /bin/cook
+# Add data dir (mount volume with your recipes and config dir here)
+RUN mkdir /data --mode=755
 
-#Add non-root user (optional)         
-RUN addgroup -g 1000 cookcli_user
-RUN adduser -u 1000 -G cookcli_user -s /bin/sh -D cookcli_user
-RUN chown -R 1000 /data && chgrp -R 1000 /data
+# Add non-root user
+RUN addgroup -g 1000 cookcli_user && \
+    adduser -u 1000 -G cookcli_user -s /bin/sh -D cookcli_user
+
+# Copy binary from builder stage
+COPY --from=builder /app/target/release/cook /bin/cook
+RUN chmod 755 /bin/cook
+
+# Set ownership and switch to non-root user
+RUN chown -R cookcli_user:cookcli_user /data
 USER cookcli_user
 
-#Run server
+WORKDIR /data
 EXPOSE 9080
-ENTRYPOINT cook server --host /data
+
+# Run server (using JSON array format for better signal handling)
+ENTRYPOINT ["cook", "server", ".", "--host", "0.0.0.0", "--port", "9080"]
