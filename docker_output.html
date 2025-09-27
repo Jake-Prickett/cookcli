@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes - Cook</title>
+    <link href="/static/css/output.css" rel="stylesheet">
+    <script>
+        // Check for saved theme preference or default to light
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+    </script>
+    <style>
+        /* Global text wrapping */
+        * {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Prevent code/pre elements from overflowing */
+        pre, code {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+        }
+
+        /* Dark mode styles */
+        .dark {
+            color-scheme: dark;
+        }
+
+        .dark body {
+            background-color: #111827;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #111827;
+        }
+
+        .dark .bg-white {
+            background-color: #1f2937;
+        }
+
+        .dark .text-gray-900 {
+            color: #f9fafb;
+        }
+
+        .dark .text-gray-800 {
+            color: #e5e7eb;
+        }
+
+        .dark .text-gray-700 {
+            color: #d1d5db;
+        }
+
+        .dark .text-gray-600 {
+            color: #9ca3af;
+        }
+
+        .dark .text-gray-500 {
+            color: #6b7280;
+        }
+
+        .dark .text-gray-400 {
+            color: #9ca3af;
+        }
+
+        .dark .border-gray-300 {
+            border-color: #4b5563;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #374151;
+        }
+
+        .dark .border-purple-200 {
+            border-color: #7c3aed;
+        }
+
+        .dark .hover\\:text-gray-900:hover {
+            color: #f9fafb;
+        }
+
+        .dark .hover\\:text-gray-800:hover {
+            color: #e5e7eb;
+        }
+
+        .dark .hover\\:bg-gray-100:hover {
+            background-color: #374151;
+        }
+
+        .dark .bg-gradient-to-r.from-orange-50.to-yellow-50 {
+            background: linear-gradient(to right, #1f2937, #111827);
+            border: 1px solid #374151;
+        }
+
+        .dark .bg-gradient-to-r.from-gray-50.to-orange-50 {
+            background: linear-gradient(to right, #1f2937, #111827);
+            border: 1px solid #374151;
+        }
+
+        .dark .bg-gradient-to-r.from-green-50.to-blue-50 {
+            background: linear-gradient(to right, #1f2937, #111827);
+            border: 1px solid #374151;
+        }
+
+        .dark .bg-gradient-to-r.from-blue-50.to-purple-50 {
+            background: linear-gradient(to right, #1f2937, #111827);
+            border: 1px solid #374151;
+        }
+
+        /* Shopping list specific dark styles */
+        .dark .bg-gradient-to-r.from-purple-50.to-pink-50 {
+            background: linear-gradient(to right, #1f2937, #111827);
+            border: 1px solid #374151;
+        }
+
+        .dark .bg-gradient-to-r.from-green-50.to-emerald-50 {
+            background: linear-gradient(to right, #1f2937, #111827);
+            border: 1px solid #374151;
+        }
+
+        .dark .border-purple-200 {
+            border-color: #4c1d95;
+        }
+
+        .dark .border-green-200 {
+            border-color: #065f46;
+        }
+
+        .dark .border-orange-200 {
+            border-color: #7c2d12;
+        }
+
+        .dark .border-blue-400 {
+            border-color: #1e3a8a;
+        }
+
+        /* Dark mode hover states */
+        .dark .hover\\:bg-gradient-to-r:hover {
+            background: #374151 !important;
+        }
+
+        .dark .hover\\:from-purple-50:hover,
+        .dark .hover\\:to-pink-50:hover {
+            background: #374151 !important;
+        }
+
+        .dark .hover\\:from-orange-100:hover,
+        .dark .hover\\:to-amber-100:hover {
+            background: #374151 !important;
+        }
+
+        .dark .hover\\:from-purple-100:hover,
+        .dark .hover\\:to-pink-100:hover {
+            background: #374151 !important;
+        }
+
+        .dark a.hover\\:bg-gradient-to-r:hover {
+            background: #374151 !important;
+            color: #e5e7eb !important;
+        }
+
+        /* Fix for navigation pill hover states */
+        .dark a[href="/"].hover\\:bg-gradient-to-r:hover,
+        .dark a[href="/shopping-list"].hover\\:bg-gradient-to-r:hover {
+            background: #374151 !important;
+        }
+
+        .dark .hover\\:text-orange-700:hover {
+            color: #fb923c !important;
+        }
+
+        .dark .hover\\:text-purple-700:hover {
+            color: #a78bfa !important;
+        }
+
+        /* Button dark mode styles */
+        .dark .bg-gray-200 {
+            background-color: #4b5563;
+        }
+
+        .dark .hover\\:bg-gray-300:hover {
+            background-color: #6b7280;
+        }
+
+        .dark .bg-gray-200.text-gray-700 {
+            color: #e5e7eb;
+        }
+
+        /* Text colors in various contexts */
+        .dark .text-purple-600 {
+            color: #c084fc;
+        }
+
+        .dark .text-red-500 {
+            color: #ef4444;
+        }
+
+        .dark .hover\\:text-red-700:hover {
+            color: #dc2626;
+        }
+
+        .dark .text-green-600 {
+            color: #34d399;
+        }
+
+        .dark .shadow-lg, .dark .shadow-md, .dark .shadow-xl {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Dark mode tag and badge styles */
+        .dark .bg-gradient-to-r.from-yellow-100.to-orange-100 {
+            background: linear-gradient(to right, #374151, #4b5563);
+        }
+
+        .dark .text-orange-700 {
+            color: #fb923c;
+        }
+
+        .dark .text-orange-600 {
+            color: #fb923c;
+        }
+
+        .dark .bg-gradient-to-r.from-purple-100.to-pink-100 {
+            background: linear-gradient(to right, #374151, #4b5563);
+        }
+
+        .dark .text-purple-700 {
+            color: #a78bfa;
+        }
+
+        .dark .bg-gray-100 {
+            background-color: #374151;
+        }
+
+        /* Recipe card specific dark styles */
+        .dark .recipe-card {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+        }
+
+        /* Search results dark mode */
+        .dark #search-results {
+            background-color: #1f2937;
+            border-color: #7c3aed;
+        }
+
+        .dark #search-results a {
+            color: #e5e7eb;
+        }
+
+        .dark #search-results a:hover {
+            background-color: #374151;
+        }
+
+        .dark #search-results .text-gray-800 {
+            color: #e5e7eb;
+        }
+
+        .dark #search-results .text-gray-500 {
+            color: #9ca3af;
+        }
+
+        /* Override inline hover styles in search results */
+        .dark #search-results a.hover\\:bg-gradient-to-r:hover {
+            background: #374151 !important;
+        }
+
+        .dark #search-results .border-gray-100 {
+            border-color: #374151;
+        }
+
+        .dark #search-input {
+            background-color: #374151;
+            border-color: #7c3aed;
+            color: #e5e7eb;
+        }
+
+        .dark #search-input::placeholder {
+            color: #6b7280;
+        }
+
+        .dark #search-input:focus {
+            border-color: #a78bfa;
+        }
+
+
+        @media print {
+            /* Global print styles */
+            * {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            body {
+                background: white !important;
+                margin: 0;
+                padding: 0;
+            }
+
+            .viewport {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Hide navigation and non-essential elements */
+            nav, #search-container, #search-input, #search-results, .print\\:hidden, .breadcrumb {
+                display: none !important;
+            }
+
+            /* Hide entire navigation bar and its contents */
+            .bg-white.shadow-lg.rounded-2xl.mb-8 {
+                display: none !important;
+            }
+
+            /* Hide all navigation links */
+            a[href="/"], a[href="/shopping-list"], a[href="/preferences"] {
+                display: none !important;
+            }
+
+            /* Recipe layout for print */
+            .grid {
+                display: block !important;
+            }
+
+            /* Remove shadows and borders for cleaner print */
+            .shadow-lg, .shadow-md, .shadow-xl {
+                box-shadow: none !important;
+            }
+
+            .rounded-2xl, .rounded-xl, .rounded-lg {
+                border-radius: 0 !important;
+            }
+
+            /* Optimize colors for print */
+            .bg-gradient-to-r {
+                background: transparent !important;
+            }
+
+            .text-orange-600, .text-orange-700 {
+                color: #000 !important;
+                font-weight: bold;
+            }
+
+            .text-green-600 {
+                color: #000 !important;
+            }
+
+            /* Page breaks */
+            .md\\:col-span-1, .md\\:col-span-2 {
+                page-break-inside: avoid;
+                width: 100% !important;
+            }
+
+            /* Ingredient and step styling */
+            .bg-gradient-to-r.from-orange-50,
+            .bg-gradient-to-r.from-green-50,
+            .bg-gradient-to-r.from-gray-50,
+            .bg-gradient-to-r.from-blue-50 {
+                background: #f9f9f9 !important;
+                border: 1px solid #ddd !important;
+            }
+
+            /* Step numbers */
+            .step-number {
+                background: #000 !important;
+                color: #fff !important;
+            }
+
+            /* Images */
+            img {
+                max-height: 300px !important;
+                page-break-inside: avoid;
+                page-break-after: avoid;
+            }
+
+            /* Recipe sections on same page if possible */
+            h2, h3 {
+                page-break-after: avoid;
+            }
+
+            ol, ul {
+                page-break-inside: avoid;
+            }
+
+            /* Compact spacing */
+            .mb-8, .mb-6, .mb-4 {
+                margin-bottom: 0.5rem !important;
+            }
+
+            .p-6 {
+                padding: 0.5rem !important;
+            }
+
+            /* Recipe header */
+            h1 {
+                color: #000 !important;
+                font-size: 1.5rem !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Print-specific flexbox utilities */
+            .print\\:flex-row {
+                flex-direction: row !important;
+            }
+
+            .print\\:items-center {
+                align-items: center !important;
+            }
+
+            .print\\:block {
+                display: block !important;
+            }
+
+            .print\\:text-2xl {
+                font-size: 1.5rem !important;
+            }
+
+            /* Ensure ingredients and instructions stay together */
+            .bg-white {
+                background: white !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <div class="viewport container-bounds">
+        <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700 mb-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0">
+                        <a href="/" class="text-xl font-semibold text-gray-900 dark:text-white">Cook</a>
+                    </div>
+
+                    <!-- Desktop navigation - centered -->
+                    <div class="hidden md:flex md:items-center md:space-x-6">
+                        <a href="/" class="bg-gray-900 text-white dark:bg-gray-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Recipes
+                        </a>
+                        <a href="/recipe/new" class="text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Create Recipe
+                        </a>
+                        <a href="/shopping-list" class="text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Shopping List
+                        </a>
+                        <a href="/pantry" class="text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            Pantry
+                        </a>
+                    </div>
+
+                    <!-- Right side: Settings, Theme, Search, Mobile Menu -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Settings (Desktop and Mobile) -->
+                        <a href="/preferences" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-2 rounded-md transition-colors" aria-label="Settings">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </a>
+
+                        <!-- Theme toggle (Desktop and Mobile) -->
+                        <button onclick="toggleTheme()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-2 rounded-md transition-colors print:hidden" aria-label="Toggle theme">
+                            <svg class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <svg class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Desktop Search -->
+                        <div class="relative hidden md:block" id="search-container">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" id="search-input" placeholder="Search..." class="w-40 md:w-48 lg:w-56 pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-gray-900 dark:focus:border-gray-300 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-300 focus:outline-none transition-colors">
+                            <div id="search-results" class="absolute top-full mt-1 right-0 w-40 md:w-48 lg:w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-y-auto hidden" style="z-index: 50;"></div>
+                        </div>
+
+                        <!-- Mobile menu button -->
+                        <button type="button" onclick="toggleMobileMenu()" class="md:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-2 rounded-md transition-colors ml-2" aria-label="Toggle menu">
+                            <svg class="w-6 h-6 block" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-open">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                            <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="menu-close">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+
+                <!-- Mobile menu -->
+                <div class="md:hidden hidden" id="mobile-menu" style="z-index: 40;">
+                    <div class="px-2 pt-2 pb-4 space-y-1 border-t border-gray-200 dark:border-gray-700 mt-2">
+                        <!-- Mobile search -->
+                        <div class="relative mb-4" id="mobile-search-container">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text"
+                                   id="mobile-search-input"
+                                   placeholder="Search recipes..."
+                                   class="w-full pl-9 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-gray-900 dark:focus:border-gray-300 focus:ring-1 focus:ring-gray-900 dark:focus:ring-gray-300 focus:outline-none transition-colors">
+                            <div id="mobile-search-results"
+                                 class="absolute top-full mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg hidden max-h-64 overflow-y-auto" style="z-index: 50;">
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile navigation links -->
+                        <a href="/" class="bg-gray-900 text-white dark:bg-gray-600 block px-3 py-3 rounded-md font-medium transition-colors">
+                            🏠 Recipes
+                        </a>
+                        <a href="/recipe/new" class="text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-3 rounded-md font-medium transition-colors">
+                            ✏️ Create Recipe
+                        </a>
+                        <a href="/shopping-list" class="text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-3 rounded-md font-medium transition-colors">
+                            🛒 Shopping List
+                        </a>
+                        <a href="/pantry" class="text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-3 rounded-md font-medium transition-colors">
+                            🥫 Pantry
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container-bounds wrap-text">
+            
+<div class="container-bounds wrap-text">
+    
+
+    <h1 class="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
+        All Recipes
+    </h1>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        
+        
+        <a href="/directory/Breakfast" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            <div class="p-4 sm:p-6 flex-1">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">📁</span>
+                </div>
+                <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">Breakfast</h3>
+                
+                <span class="text-sm text-gray-600 dark:text-gray-400">2 recipes</span>
+                
+            </div>
+        </a>
+        
+        
+        
+        <a href="/directory/Shared" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            <div class="p-4 sm:p-6 flex-1">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">📁</span>
+                </div>
+                <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">Shared</h3>
+                
+                <span class="text-sm text-gray-600 dark:text-gray-400">3 recipes</span>
+                
+            </div>
+        </a>
+        
+        
+        
+        <a href="/recipe/2 Day Plan" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 dark:bg-purple-900 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">📋</span>
+                </div>
+            
+            <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">
+                2 Day Plan
+                
+                <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-medium">Menu</span>
+                
+            </h3>
+            
+            
+            
+            </div>
+        </a>
+        
+        
+        
+        <a href="/recipe/Neapolitan Pizza" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 dark:bg-orange-900 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">🍽️</span>
+                </div>
+            
+            <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">
+                Neapolitan Pizza
+                
+            </h3>
+            
+            
+            
+            </div>
+        </a>
+        
+        
+        
+        <a href="/recipe/Sicilian-style Scottadito Lamb Chops" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 dark:bg-orange-900 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">🍽️</span>
+                </div>
+            
+            <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">
+                Sicilian-style Scottadito Lamb Chops
+                
+            </h3>
+            
+            
+            
+            </div>
+        </a>
+        
+        
+        
+        <a href="/recipe/Snack Basket I" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 dark:bg-orange-900 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">🍽️</span>
+                </div>
+            
+            <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">
+                Snack Basket I
+                
+            </h3>
+            
+            
+            
+            </div>
+        </a>
+        
+        
+        
+        <a href="/recipe/Snack Basket II" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col container-bounds">
+            
+            <div class="p-4 sm:p-6">
+                <div class="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 dark:bg-orange-900 rounded-full mb-4">
+                    <span class="text-xl sm:text-2xl">🍽️</span>
+                </div>
+            
+            <h3 class="font-semibold text-base sm:text-lg mb-2 text-gray-900 dark:text-white wrap-text">
+                Snack Basket II
+                
+            </h3>
+            
+            
+            
+            </div>
+        </a>
+        
+        
+
+        
+    </div>
+</div>
+
+        </main>
+    </div>
+
+    <script>
+        // Theme toggle function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuOpen = document.getElementById('menu-open');
+            const menuClose = document.getElementById('menu-close');
+            
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+                menuOpen.classList.add('hidden');
+                menuClose.classList.remove('hidden');
+            } else {
+                mobileMenu.classList.add('hidden');
+                menuOpen.classList.remove('hidden');
+                menuClose.classList.add('hidden');
+            }
+        }
+
+        // Search functionality
+        function setupDesktopSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+            let searchTimeout;
+
+            if (!searchInput || !searchResults) return;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                        const results = await response.json();
+
+                        if (results.length === 0) {
+                            searchResults.innerHTML = '<div class="p-3 text-gray-500 dark:text-gray-400 text-center text-sm">No recipes found</div>';
+                        } else {
+                            searchResults.innerHTML = results.map(recipe =>
+                                `<a href="/recipe/${recipe.path}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                                    <div class="font-medium text-gray-800 dark:text-gray-200 text-sm">${recipe.name}</div>
+                                </a>`
+                            ).join('');
+                        }
+                        searchResults.classList.remove('hidden');
+                    } catch (error) {
+                        searchResults.innerHTML = '<div class="p-3 text-red-500 text-center text-sm">Search error</div>';
+                        searchResults.classList.remove('hidden');
+                    }
+                }, 300);
+            });
+        }
+
+        function setupMobileSearch() {
+            const searchInput = document.getElementById('mobile-search-input');
+            const searchResults = document.getElementById('mobile-search-results');
+            let searchTimeout;
+
+            if (!searchInput || !searchResults) return;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                        const results = await response.json();
+
+                        if (results.length === 0) {
+                            searchResults.innerHTML = '<div class="p-3 text-gray-500 dark:text-gray-400 text-center text-sm">No recipes found</div>';
+                        } else {
+                            searchResults.innerHTML = results.map(recipe =>
+                                `<a href="/recipe/${recipe.path}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                                    <div class="font-medium text-gray-800 dark:text-gray-200 text-sm">${recipe.name}</div>
+                                </a>`
+                            ).join('');
+                        }
+                        searchResults.classList.remove('hidden');
+                    } catch (error) {
+                        searchResults.innerHTML = '<div class="p-3 text-red-500 text-center text-sm">Search error</div>';
+                        searchResults.classList.remove('hidden');
+                    }
+                }, 300);
+            });
+        }
+
+        // Initialize search
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDesktopSearch();
+            setupMobileSearch();
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            const searchContainer = document.getElementById('search-container');
+            const searchResults = document.getElementById('search-results');
+            const mobileSearchContainer = document.getElementById('mobile-search-container');
+            const mobileSearchResults = document.getElementById('mobile-search-results');
+            
+            // Close desktop search if clicking outside search container
+            if (searchContainer && !searchContainer.contains(e.target)) {
+                if (searchResults) {
+                    searchResults.classList.add('hidden');
+                }
+            }
+            
+            // Close mobile search if clicking outside mobile container
+            if (mobileSearchContainer && !mobileSearchContainer.contains(e.target)) {
+                if (mobileSearchResults) {
+                    mobileSearchResults.classList.add('hidden');
+                }
+            }
+        });
+
+        // Close mobile menu when clicking on navigation links
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.add('hidden');
+                document.getElementById('menu-open').classList.remove('hidden');
+                document.getElementById('menu-close').classList.add('hidden');
+            });
+        });
+    </script>
+
+    
+</body>
+</html>

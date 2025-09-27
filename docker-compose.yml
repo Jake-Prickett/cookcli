@@ -1,0 +1,14 @@
+name: Cookcli
+services:
+  cookcli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9080:9080"
+    volumes:
+      - ${ROOT:-./recipes}:/data  # Default to ./recipes if ROOT not set
+    container_name: cookcli
+    restart: always
+    environment:
+      - RUST_LOG=info

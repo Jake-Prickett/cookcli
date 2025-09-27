@@ -47,4 +47,4 @@ WORKDIR /data
 EXPOSE 9080
 
 # Run server (using JSON array format for better signal handling)
-ENTRYPOINT ["cook", "server", ".", "--host", "0.0.0.0", "--port", "9080"]
+ENTRYPOINT ["cook", "server", ".", "--host", "--port", "9080"]
