@@ -20,6 +20,18 @@ pub struct SearchQuery {
     q: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct SaveRecipeRequest {
+    title: Option<String>,
+    content: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PlainTextRecipeRequest {
+    title: Option<String>,
+    content: String,
+}
+
 fn check_path(p: &str) -> Result<(), StatusCode> {
     let path = Utf8Path::new(p);
     if !path
@@ -137,6 +149,42 @@ pub async fn reload() -> Result<Json<serde_json::Value>, StatusCode> {
     })))
 }
 
+pub async fn save_recipe(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<SaveRecipeRequest>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    use std::fs;
+    use std::path::Path;
+
+    // Generate filename from title or timestamp
+    let filename = if let Some(title) = request.title {
+        let safe_title: String = title
+            .chars()
+            .map(|c| if c.is_alphanumeric() || c == ' ' { c } else { '-' })
+            .collect();
+        format!("{}.cook", safe_title.trim().replace(' ', "-").to_lowercase())
+    } else {
+        use chrono::Local;
+        format!("recipe-{}.cook", Local::now().format("%Y%m%d-%H%M%S"))
+    };
+
+    // Create full path
+    let filepath = state.base_path.join(&filename);
+    
+    // Save file
+    fs::write(&filepath, &request.content).map_err(|e| {
+        tracing::error!("Failed to write recipe file: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Return success with file info
+    Ok(Json(serde_json::json!({
+        "success": true,
+        "filename": filename,
+        "path": filepath.to_string()
+    })))
+}
+
 pub async fn search(
     State(state): State<Arc<AppState>>,
     Query(query): Query<SearchQuery>,
@@ -160,4 +208,101 @@ pub async fn search(
         .collect();
 
     Ok(Json(results))
+}
+
+pub async fn ai_convert(
+    State(state): State<Arc<AppState>>,
+    Json(request): Json<PlainTextRecipeRequest>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    use std::fs;
+    use std::path::Path;
+
+    // Validate input
+    if request.content.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Get Claude API key from environment
+    let api_key = std::env::var("CLAUDE_API_KEY").map_err(|_| {
+        tracing::error!("CLAUDE_API_KEY not set");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Create Claude client
+    let client = reqwest::Client::new();
+    let response = client
+        .post("https://api.anthropic.com/v1/messages")
+        .header("anthropic-version", "2023-06-01")
+        .header("x-api-key", api_key)
+        .json(&serde_json::json!({
+            "model": "claude-3-sonnet-20240229",
+            "max_tokens": 1500,
+            "temperature": 0.1,
+            "messages": [{
+                "role": "user",
+                "content": format!(
+                    "Convert this recipe to cooklang format (https://cooklang.org/).\n\
+                    Include metadata section with title and servings if available.\n\
+                    Mark ingredients with @ and cookware with #.\n\
+                    Example format:\n\
+                    ---\n\
+                    title: \"Classic Chocolate Chip Cookies\"\n\
+                    servings: \"24 cookies\"\n\
+                    ---\n\
+                    Preheat #oven{{}} to 375°F.\n\
+                    In a #large bowl{{}}, cream together @butter{{1%cup}} and @sugar{{1%cup}}.\n\
+                    \n\
+                    Here's the recipe to convert:\n\
+                    {}\n\
+                    Return only the cooklang recipe text, no other text.",
+                    request.content
+                )
+            }]
+        }))
+        .send()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to call Claude API: {}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    // Parse response
+    let claude_response: serde_json::Value = response.json().await.map_err(|e| {
+        tracing::error!("Failed to parse Claude response: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let cooklang_text = claude_response["content"][0]["text"]
+        .as_str()
+        .ok_or_else(|| {
+            tracing::error!("Invalid Claude response format");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    // Generate safe filename from title or timestamp
+    let filename = if let Some(title) = request.title {
+        let safe_title: String = title
+            .chars()
+            .map(|c| if c.is_alphanumeric() || c == ' ' { c } else { '-' })
+            .collect();
+        format!("{}.cook", safe_title.trim().replace(' ', "-").to_lowercase())
+    } else {
+        let timestamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+        format!("recipe-{}.cook", timestamp)
+    };
+
+    // Save as .cook file
+    let filepath = state.base_path.join(&filename);
+    fs::write(&filepath, cooklang_text).map_err(|e| {
+        tracing::error!("Failed to write recipe file: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    // Return success with file info
+    Ok(Json(serde_json::json!({
+        "status": "success",
+        "filename": filename,
+        "path": filepath.to_string_lossy(),
+        "content": cooklang_text
+    })))
 }

@@ -240,6 +240,7 @@ fn api(_state: &AppState) -> Result<Router<Arc<AppState>>> {
             axum::routing::put(handlers::update_pantry_item),
         )
         .route("/recipes", get(handlers::all_recipes))
+        .route("/recipes/save", post(handlers::recipes::save_recipe))
         .route("/recipes/*path", get(handlers::recipe))
         .route("/search", get(handlers::search))
         .route("/reload", get(handlers::reload).post(handlers::reload));
