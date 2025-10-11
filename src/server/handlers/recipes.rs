@@ -154,7 +154,6 @@ pub async fn save_recipe(
     Json(request): Json<SaveRecipeRequest>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     use std::fs;
-    use std::path::Path;
 
     // Generate filename from title or timestamp
     let filename = if let Some(title) = request.title {
@@ -215,7 +214,6 @@ pub async fn ai_convert(
     Json(request): Json<PlainTextRecipeRequest>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
     use std::fs;
-    use std::path::Path;
 
     // Validate input
     if request.content.is_empty() {
@@ -302,7 +300,7 @@ pub async fn ai_convert(
     Ok(Json(serde_json::json!({
         "status": "success",
         "filename": filename,
-        "path": filepath.to_string_lossy(),
+        "path": filepath.to_string(),
         "content": cooklang_text
     })))
 }
